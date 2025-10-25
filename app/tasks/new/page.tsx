@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -7,7 +6,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { taskService } from '@/services/taskService';
 import { AuthGuard } from '@/components/AuthGuard';
 import { AxiosError } from 'axios';
-import { LaravelValidationData } from '@/types/task'; // IMPORTANTE: Importamos la nueva interfaz
+import { LaravelValidationData } from '@/types/task'; 
 
 function CreateTaskContent() {
   const router = useRouter();
@@ -36,7 +35,7 @@ function CreateTaskContent() {
       let message = 'Error al crear la tarea. Inténtalo de nuevo.';
       
       if (axiosError.response && axiosError.response.data) {
-        // CORRECCIÓN: Afirmamos la estructura de los datos de respuesta
+        // Manejo de errores de validación de la API
         const responseData = axiosError.response.data as LaravelValidationData;
 
         if (responseData.errors) {
@@ -65,7 +64,6 @@ function CreateTaskContent() {
         {error && <p className="text-red-600 mb-4 p-3 bg-red-100 rounded-lg border border-red-300">{error}</p>}
 
         <form onSubmit={handleSubmit}>
-          {/* Campo Título (A11y corregido) */}
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="title">Título</label>
             <input
@@ -79,7 +77,6 @@ function CreateTaskContent() {
             />
           </div>
 
-          {/* Campo Descripción (A11y corregido) */}
           <div className="mb-6">
             <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="description">Descripción (Opcional)</label>
             <textarea

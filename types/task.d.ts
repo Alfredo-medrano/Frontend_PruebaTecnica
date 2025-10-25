@@ -1,4 +1,4 @@
-// Define el tipo para los errores de validación de Laravel
+// Define el tipo para los errores de validación de la API
 export interface LaravelValidationData {
   message: string;
   errors: Record<string, string[]>;
@@ -11,14 +11,14 @@ export interface User {
   email: string;
 }
 
-// Define el tipo para una Tarea (corregido para coincidir con TaskResource.php)
+// Define el tipo para la tarea
 export interface Task {
   id: number;
-  titulo: string; // <-- CORREGIDO
-  descripcion: string | null; // <-- CORREGIDO y permite null
+  titulo: string; 
+  descripcion: string | null; 
   completada: boolean;
-  creada_en: string; // <-- CORREGIDO
-  actualizada_en: string; // <-- CORREGIDO
+  creada_en: string; 
+  actualizada_en: string; 
 }
 
 // Define la forma del estado de autenticación

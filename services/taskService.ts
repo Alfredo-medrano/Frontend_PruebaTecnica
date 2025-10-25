@@ -1,15 +1,15 @@
 import api from '@/lib/axios';
 import { Task } from '@/types/task';
 
+// Definimos la interfaz para el payload de actualización de tareas
 interface TaskPayload {
   title: string;
-  // --- CORRECCIÓN AQUÍ ---
-  description?: string | null; // <-- Añadimos '| null'
+  description?: string | null; 
   is_completed?: boolean;
 }
 
+// Servicio para manejar las operaciones relacionadas con las tareas
 export const taskService = {
-  // El resto del archivo queda exactamente igual...
 
   async getTasks(): Promise<Task[]> {
     const response = await api.get('/tasks');

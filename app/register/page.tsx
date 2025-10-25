@@ -8,7 +8,7 @@ import { AuthContext } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { AxiosError } from 'axios'; 
 
-// Interfaz que modela la respuesta de error de validación de Laravel
+// Definimos la interfaz para los errores de validación de Laravel
 interface LaravelValidationData {
   message: string;
   errors: Record<string, string[]>;
@@ -27,9 +27,6 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // NOTA: Se ha eliminado el useEffect que causaba el conflicto de redirección.
-  // La redirección ahora ocurre directamente dentro del handleSubmit, de manera controlada.
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -43,17 +40,16 @@ export default function RegisterPage() {
       const response = await api.post('/register', formData);
       
       const token = response.data.access_token;
-      // 1. Guardar el token en el estado global (AuthContext)
+      // Guardar el token en el estado global
       register(token, { id: 0, name: formData.name, email: formData.email }); 
       
-      // 2. Redirección definitiva a la lista de tareas
       router.push('/tasks'); 
       
     } catch (err: unknown) { 
       const axiosError = err as AxiosError; 
       let message = 'Error al registrar. Inténtalo de nuevo.';
       
-      // Manejo de errores de validación de Laravel (TS corregido)
+      // Manejo de errores de validación de la API
       if (axiosError.response && axiosError.response.data) {
         
         const responseData = axiosError.response.data as LaravelValidationData; 
@@ -89,7 +85,6 @@ export default function RegisterPage() {
         {error && <p className="text-red-600 mb-4 p-3 bg-red-100 rounded-lg border border-red-300">{error}</p>}
 
         <form onSubmit={handleSubmit}>
-          {/* Name */}
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="name">Nombre</label>
             <input
@@ -102,7 +97,7 @@ export default function RegisterPage() {
               className="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150"
             />
           </div>
-          {/* Email */}
+
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="email">Email</label>
             <input
@@ -115,7 +110,7 @@ export default function RegisterPage() {
               className="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150"
             />
           </div>
-          {/* Password */}
+
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="password">Contraseña</label>
             <input
@@ -128,7 +123,6 @@ export default function RegisterPage() {
               className="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150"
             />
           </div>
-          {/* Confirmación de Password */}
           <div className="mb-6">
             <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="password_confirmation">Confirmar Contraseña</label>
             <input

@@ -1,18 +1,16 @@
 'use client';
-
 import React, { createContext, useState, useEffect, useCallback } from 'react';
-// CORRECCIÓN: Eliminamos 'api' de la importación porque ya no se usa (corrige Eslint)
 import { setAuthHeader } from '@/lib/axios';
 import { AuthState, User } from '@/types/task'; 
 
-// Interfaces necesarias para el Context (AHORA INCLUIDAS)
+// Definición de la interfaz del Contexto de Autenticación
 interface AuthContextType extends AuthState {
   login: (token: string | null | undefined, user: User) => void;
   logout: () => void;
   register: (token: string | null | undefined, user: User) => void;
 }
 
-// Constante inicial (AHORA INCLUIDA)
+// Estado inicial de autenticación
 const initialAuthState: AuthState = {
   user: null,
   token: null,
@@ -20,7 +18,7 @@ const initialAuthState: AuthState = {
   isLoading: true,
 };
 
-// Creación del Context (AHORA INCLUIDO)
+// Creación del Contexto de Autenticación
 export const AuthContext = createContext<AuthContextType>({
   ...initialAuthState,
   login: () => {},
@@ -31,7 +29,7 @@ export const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>(initialAuthState);
 
-  // CORRECCIÓN: Valida que el token no sea el string "undefined"
+  // Función para resolver el estado de autenticación
   const resolveAuthState = useCallback((token: string | null) => {
     const validToken = (token && token !== 'undefined') ? token : null;
 
@@ -45,19 +43,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthHeader(validToken); 
   }, []);
 
-  // CORRECCIÓN: Valida el token ANTES de guardarlo para evitar "undefined"
+  // Manejo de autenticación (login y register)
   const handleAuth = (token: string | null | undefined) => { 
     if (token && typeof token === 'string' && token !== 'undefined') {
       localStorage.setItem('jwt_token', token);
       resolveAuthState(token); 
     } else {
-      // Si el token es inválido (null, undefined, o "undefined"), limpiamos todo
+      // Si el token no es válido, asegurarse de limpiar el estado y el almacenamiento
       localStorage.removeItem('jwt_token');
       resolveAuthState(null);
     }
   };
 
-  // Silenciamos el warning de 'user' no usado
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const login = (token: string | null | undefined, user: User) => handleAuth(token);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -65,9 +62,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem('jwt_token');
-    
-    // Esta línea sigue comentada para evitar el bucle infinito
-    // api.post('/logout').catch(() => {});
 
     resolveAuthState(null);
   }, [resolveAuthState]);
@@ -75,10 +69,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true; 
 
+    // Función asíncrona para verificar el estado de autenticación
     const checkAuthStatus = async () => {
       const storedToken = localStorage.getItem('jwt_token');
-      
-      // La validación en resolveAuthState se encargará del string "undefined"
+
       if (storedToken && isMounted) {
           resolveAuthState(storedToken); 
       } else if (isMounted) {

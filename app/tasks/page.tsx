@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect, useCallback, useContext } from 'react';
 import { taskService } from '@/services/taskService';
 import { Task } from '@/types/task';
@@ -20,30 +19,25 @@ function TaskListContent() {
     setLoadingTasks(true);
     setError('');
     try {
-      // Intentar cargar las tareas
       const fetchedTasks = await taskService.getTasks();
       setTasks(fetchedTasks.sort((a, b) => (a.completada === b.completada ? 0 : a.completada ? 1 : -1)));
     } catch { 
-      // NOTA: El interceptor de Axios ya limpia el token si es 401. 
-      // El AuthContext detectará que el token se fue y redirigirá a /login.
+      // En caso de error, mostrar mensaje
       setError('Error al cargar las tareas. Tu sesión puede haber expirado.');
     } finally {
       setLoadingTasks(false);
     }
   }, []);
 
-  // CLAVE: Activación de la carga. Solo ocurre cuando:
-  // 1. El chequeo inicial de AuthContext ha terminado (`!isAuthLoading`).
-  // 2. Estamos autenticados (`isAuthenticated`).
+  // Efecto para cargar las tareas al montar el componente y cuando cambia la autenticación
   useEffect(() => {
     if (!isAuthLoading && isAuthenticated) {
         fetchTasks();
     }
-    // NOTA: Si !isAuthLoading && !isAuthenticated, el AuthGuard redirige.
     
   }, [isAuthenticated, isAuthLoading, fetchTasks]); 
 
-  // Manejar el toggle de completado (No modificado)
+  // Manejar el toggle de completado 
   const handleToggleCompleted = async (task: Task) => {
     try {
       await taskService.updateTask(String(task.id), { 

@@ -30,11 +30,11 @@ export default function LoginPage() {
     setError('');
 
     try {
+      // Realizar la solicitud de inicio de sesión
       const response = await api.post('/login', formData);
-      
-      const token = response.data.token; // <-- ¡Aquí está el cambio!
+      const token = response.data.token; 
+
       login(token, { id: 0, name: 'Usuario', email: formData.email });
-      // La redirección DEBE ocurrir después de que el estado local y global se actualicen
       router.push('/tasks'); 
 
     } catch (err: unknown) { 
@@ -48,8 +48,7 @@ export default function LoginPage() {
     }
   };
   
-  // Si el usuario está cargando o ya autenticado (por si accedió desde otra página),
-  // se remite al AuthGuard de /tasks que manejará la redirección final.
+  // Si el usuario está cargando o ya autenticado, mostramos un loader
   if (isLoading || isAuthenticated) { 
     return (
         <div className="flex justify-center items-center min-h-screen">
@@ -66,7 +65,6 @@ export default function LoginPage() {
         {error && <p className="text-red-600 mb-4 p-3 bg-red-100 rounded-lg border border-red-300">{error}</p>}
 
         <form onSubmit={handleSubmit}>
-          {/* Email */}
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="email">Email</label>
             <input
@@ -80,7 +78,6 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Password */}
           <div className="mb-6">
             <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="password">Contraseña</label>
             <input

@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
+// Definimos la URL base de la API desde las variables de entorno
 const API_URL: string = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
 
 const api: AxiosInstance = axios.create({
@@ -10,7 +11,7 @@ const api: AxiosInstance = axios.create({
   },
 });
 
-// NUEVA FUNCIÓN: Permite configurar el token de forma manual e inmediata
+//configuración de la cabecera de autorización
 export const setAuthHeader = (token: string | null) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -19,9 +20,8 @@ export const setAuthHeader = (token: string | null) => {
     delete api.defaults.headers.common['Authorization'];
   }
 };
-// FIN NUEVA FUNCIÓN
 
-// Interceptor de Solicitudes: Adjunta el token JWT (USANDO setAuthHeader para consistencia)
+// Adjunta el token JWT a cada solicitud si está disponible
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
@@ -44,7 +44,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('jwt_token');
-        // También eliminamos la cabecera de la instancia de Axios
+        // Limpiamos la cabecera de autorización
         setAuthHeader(null); 
         window.dispatchEvent(new CustomEvent('auth:unauthorized')); 
       }

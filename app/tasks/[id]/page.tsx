@@ -1,6 +1,4 @@
 'use client';
-
-// Importamos 'use' para arreglar el error de Next.js
 import { useState, useEffect, useCallback, use } from 'react'; 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -20,7 +18,6 @@ function EditTaskContent({ params }: EditTaskPageProps) {
   const router = useRouter();
   const taskId = params.id;
   
-  // CORRECCIÓN: Usamos los nombres de la API ('titulo', 'descripcion') en el estado
   const [formData, setFormData] = useState({
     titulo: '',
     descripcion: '',
@@ -36,10 +33,9 @@ function EditTaskContent({ params }: EditTaskPageProps) {
     try {
       const taskData = await taskService.getTask(taskId);
       
-      // CORRECCIÓN: Leemos los datos de la API con los nombres correctos
       setFormData({
-        titulo: taskData.titulo, // <-- CORREGIDO
-        descripcion: taskData.descripcion || '', // <-- CORREGIDO
+        titulo: taskData.titulo, 
+        descripcion: taskData.descripcion || '', 
         completada: taskData.completada,
       });
     } catch (err: unknown) { 
@@ -67,17 +63,16 @@ function EditTaskContent({ params }: EditTaskPageProps) {
     setFormData({ ...formData, completada: e.target.checked });
   };
 
-  // Manejar la Edición (PUT/PATCH)
+  // Manejar la Edición de la Tarea
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
 
     try {
-      // CORRECCIÓN: Al enviar, usamos los nombres que el backend espera
       await taskService.updateTask(taskId, {
-        title: formData.titulo, // <-- CORREGIDO
-        description: formData.descripcion, // <-- CORREGIDO
+        title: formData.titulo, 
+        description: formData.descripcion, 
         is_completed: formData.completada, 
       });
       
@@ -124,7 +119,6 @@ function EditTaskContent({ params }: EditTaskPageProps) {
         {error && <p className="text-red-600 mb-4 p-3 bg-red-100 rounded-lg border border-red-300">{error}</p>}
 
         <form onSubmit={handleSubmit}>
-          {/* CORRECCIÓN: name y value ahora usan 'titulo' */}
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="titulo">Título</label>
             <input
@@ -138,7 +132,6 @@ function EditTaskContent({ params }: EditTaskPageProps) {
             />
           </div>
 
-          {/* CORRECCIÓN: name y value ahora usan 'descripcion' */}
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="descripcion">Descripción</label>
             <textarea
@@ -151,7 +144,6 @@ function EditTaskContent({ params }: EditTaskPageProps) {
             />
           </div>
           
-          {/* Checkbox de Completado */}
           <div className="mb-6 flex items-center">
             <input
               type="checkbox"
@@ -179,10 +171,9 @@ function EditTaskContent({ params }: EditTaskPageProps) {
   );
 }
 
-// CORRECCIÓN: Arreglamos el 'use(params)' que vimos antes
+// Componente de Página Principal
 export default function EditTaskPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
-  
-  // Usamos 'use' para desenvolver la promesa
+
   const params = use(paramsPromise);
 
   return (

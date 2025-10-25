@@ -13,22 +13,19 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useContext(AuthContext);
   const router = useRouter();
 
-  // Esta variable se mantiene solo para ayudar al useEffect a decidir
-  // si debe redirigir si NO hay token (es un chequeo de cliente).
+  // Evaluar si hay un token en el almacenamiento local.
   const isClientTokenAvailable = 
     typeof window !== 'undefined' && localStorage.getItem('jwt_token');
 
   useEffect(() => {
-    // CONDICIÓN PARA REDIRIGIR: Si AuthContext terminó de cargar (false) Y 
-    // no está autenticado (false) Y no hay token en el almacenamiento local.
+    // Redirigir a /login si no está autenticado y no hay token en el almacenamiento.
     if (!isLoading && !isAuthenticated && !isClientTokenAvailable) {
       router.push('/login');
     }
     
   }, [isAuthenticated, isLoading, router, isClientTokenAvailable]);
 
-  // CORRECCIÓN CLAVE: Solo mostrar el spinner si el contexto *todavía está cargando*.
-  // Si isLoading es false, el flujo debe ser: o muestra contenido (isAuthenticated) o redirige (useEffect).
+  // Mientras se verifica la sesión, mostrar un spinner de carga.
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
@@ -43,7 +40,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
   
-  // Si no está autenticado (y ya terminó de cargar), 
-  // no muestra nada. El useEffect ya habrá disparado la redirección a /login.
+  // Si no está autenticado (y ya terminó de cargar), no muestra nada. El useEffect ya habrá disparado la redirección a /login.
   return null; 
 }
