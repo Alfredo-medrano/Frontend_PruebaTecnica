@@ -1,18 +1,17 @@
-// frontend-tasks/app/login/page.tsx (CORREGIDO)
-
 'use client';
 
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext } from 'react';
 import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AuthContext } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
-import { AxiosError } from 'axios'; // Importamos el tipo de error de Axios
+import { AxiosError } from 'axios';
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, isAuthenticated, isLoading } = useContext(AuthContext);
+  // NOTA: Eliminamos el useEffect que estaba aquí para evitar conflictos.
 
   const [formData, setFormData] = useState({
     email: '',
@@ -20,13 +19,6 @@ export default function LoginPage() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  // Redirige al usuario a /tasks si ya está autenticado.
-  useEffect(() => {
-      if (!isLoading && isAuthenticated) {
-          router.push('/tasks');
-      }
-  }, [isLoading, isAuthenticated, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -41,11 +33,12 @@ export default function LoginPage() {
       const response = await api.post('/login', formData);
       
       const token = response.data.access_token;
-      // Usamos datos simulados, ya que el backend solo devuelve el token al login
       login(token, { id: 0, name: 'Usuario', email: formData.email }); 
       
-      router.push('/tasks');
-    } catch (err: unknown) { // CORRECCIÓN #3: Usar unknown en lugar de any
+      // La redirección DEBE ocurrir después de que el estado local y global se actualicen
+      router.push('/tasks'); 
+
+    } catch (err: unknown) { 
       const axiosError = err as AxiosError;
       
       const status = axiosError.response?.status;
@@ -56,7 +49,9 @@ export default function LoginPage() {
     }
   };
   
-  if (isLoading || isAuthenticated) {
+  // Si el usuario está cargando o ya autenticado (por si accedió desde otra página),
+  // se remite al AuthGuard de /tasks que manejará la redirección final.
+  if (isLoading || isAuthenticated) { 
     return (
         <div className="flex justify-center items-center min-h-screen">
             <Loader2 className="animate-spin h-8 w-8 text-indigo-600" />
@@ -72,12 +67,12 @@ export default function LoginPage() {
         {error && <p className="text-red-600 mb-4 p-3 bg-red-100 rounded-lg border border-red-300">{error}</p>}
 
         <form onSubmit={handleSubmit}>
-          {/* Email - CORRECCIÓN #1: Añadir id="email" */}
+          {/* Email */}
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="email">Email</label>
             <input
               type="email"
-              id="email" // <--- Agregado 'id' para accesibilidad
+              id="email" 
               name="email"
               value={formData.email}
               onChange={handleChange}
@@ -86,12 +81,12 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Password - CORRECCIÓN #2: Añadir id="password" */}
+          {/* Password */}
           <div className="mb-6">
             <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="password">Contraseña</label>
             <input
               type="password"
-              id="password" // <--- Agregado 'id' para accesibilidad
+              id="password" 
               name="password"
               value={formData.password}
               onChange={handleChange}

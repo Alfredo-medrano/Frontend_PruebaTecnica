@@ -1,9 +1,12 @@
 'use client';
 
 import React, { createContext, useState, useEffect, useCallback } from 'react';
-import api from '@/lib/axios';
-import { AuthState, User } from '@/types/task';
+// IMPORTAMOS setAuthHeader
+// CORRECCIÓN: Eliminamos LaravelValidationData del import de types
+import api, { setAuthHeader } from '@/lib/axios';
+import { AuthState, User } from '@/types/task'; 
 
+// Interfaces necesarias para el Context
 interface AuthContextType extends AuthState {
   login: (token: string, user: User) => void;
   logout: () => void;
@@ -27,39 +30,48 @@ export const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>(initialAuthState);
 
-  const setAuthData = useCallback((token: string | null, user: User | null) => {
+  const resolveAuthState = useCallback((token: string | null) => {
     setState({
-      user,
-      token,
+      user: token ? { id: 0, name: 'Usuario', email: 'email@test.com' } : null,
+      token: token,
       isAuthenticated: !!token,
       isLoading: false,
     });
+    
+    // CLAVE: Configura la cabecera de Axios de forma inmediata.
+    setAuthHeader(token); 
   }, []);
 
-  const handleAuth = (token: string, user: User) => {
+  const handleAuth = (token: string) => { 
     localStorage.setItem('jwt_token', token);
-    setAuthData(token, user);
+    resolveAuthState(token); // Esto dispara setAuthHeader(token)
   };
 
-  const login = (token: string, user: User) => handleAuth(token, user);
-  const register = (token: string, user: User) => handleAuth(token, user);
+  // Silenciamos el warning de 'user' no usado, ya que solo necesitamos el token para handleAuth.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const login = (token: string, user: User) => handleAuth(token);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const register = (token: string, user: User) => handleAuth(token);
 
   const logout = useCallback(() => {
     localStorage.removeItem('jwt_token');
+    // setAuthHeader(null) se llama dentro de resolveAuthState.
     api.post('/logout').catch(() => {});
-    setAuthData(null, null);
-  }, [setAuthData]);
+    resolveAuthState(null);
+  }, [resolveAuthState]);
 
   useEffect(() => {
     let isMounted = true; 
 
-    const checkAuthStatus = () => {
+    const checkAuthStatus = async () => {
       const storedToken = localStorage.getItem('jwt_token');
       
       if (storedToken && isMounted) {
-          setAuthData(storedToken, { id: 0, name: 'Usuario', email: 'email@test.com' }); 
+          // Si hay token, lo establecemos (y setAuthHeader se llama)
+          resolveAuthState(storedToken); 
       } else if (isMounted) {
-          setState(prev => ({ ...prev, isLoading: false }));
+          // Si no hay token, resolvemos sin token (y setAuthHeader(null) se llama)
+          resolveAuthState(null);
       }
     };
 
@@ -79,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         window.removeEventListener('auth:unauthorized', handleUnauthorized);
       }
     };
-  }, [logout, setAuthData]); 
+  }, [logout, resolveAuthState]);
 
   return (
     <AuthContext.Provider value={{ ...state, login, logout, register }}>

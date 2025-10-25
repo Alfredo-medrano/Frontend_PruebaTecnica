@@ -1,5 +1,3 @@
-// frontend-tasks/app/tasks/page.tsx (CORRECCIÓN FINAL - Eliminando la declaración 'err')
-
 'use client';
 
 import { useState, useEffect, useCallback, useContext } from 'react';
@@ -11,31 +9,41 @@ import { AuthContext } from '@/context/AuthContext';
 import Link from 'next/link';
 
 function TaskListContent() {
-  const { logout } = useContext(AuthContext);
+  const { logout, isAuthenticated, isLoading: isAuthLoading } = useContext(AuthContext); 
+  
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingTasks, setLoadingTasks] = useState(false); 
   const [error, setError] = useState('');
 
   // Carga de Tareas
   const fetchTasks = useCallback(async () => {
-    setLoading(true);
+    setLoadingTasks(true);
     setError('');
     try {
+      // Intentar cargar las tareas
       const fetchedTasks = await taskService.getTasks();
-      // Ordena: pendientes primero, completadas al final
       setTasks(fetchedTasks.sort((a, b) => (a.completada === b.completada ? 0 : a.completada ? 1 : -1)));
-    } catch { // CORRECCIÓN 1: No declarar la variable de error
-      setError('Error al cargar las tareas.');
+    } catch { 
+      // NOTA: El interceptor de Axios ya limpia el token si es 401. 
+      // El AuthContext detectará que el token se fue y redirigirá a /login.
+      setError('Error al cargar las tareas. Tu sesión puede haber expirado.');
     } finally {
-      setLoading(false);
+      setLoadingTasks(false);
     }
   }, []);
 
+  // CLAVE: Activación de la carga. Solo ocurre cuando:
+  // 1. El chequeo inicial de AuthContext ha terminado (`!isAuthLoading`).
+  // 2. Estamos autenticados (`isAuthenticated`).
   useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
+    if (!isAuthLoading && isAuthenticated) {
+        fetchTasks();
+    }
+    // NOTA: Si !isAuthLoading && !isAuthenticated, el AuthGuard redirige.
+    
+  }, [isAuthenticated, isAuthLoading, fetchTasks]); 
 
-  // Manejar el toggle de completado
+  // Manejar el toggle de completado (No modificado)
   const handleToggleCompleted = async (task: Task) => {
     try {
       await taskService.updateTask(String(task.id), { 
@@ -43,35 +51,49 @@ function TaskListContent() {
         title: task.title,
         description: task.description
       });
-
-      // Actualizar el estado local y reordenar
       setTasks(prevTasks => {
           const updatedTasks = prevTasks.map(t => 
               t.id === task.id ? { ...t, completada: !t.completada } : t
           );
           return updatedTasks.sort((a, b) => (a.completada === b.completada ? 0 : a.completada ? 1 : -1));
       });
-    } catch { // CORRECCIÓN 2: No declarar la variable de error
+    } catch { 
       setError('Error al actualizar la tarea.');
     }
   };
 
-  // Manejar eliminación
+  // Manejar eliminación (No modificado)
   const handleDelete = async (taskId: number) => {
     if (!window.confirm('¿Estás seguro de que quieres eliminar esta tarea?')) return;
     try {
       await taskService.deleteTask(taskId);
       setTasks(tasks.filter(t => t.id !== taskId));
-    } catch { // CORRECCIÓN 3: No declarar la variable de error
+    } catch { 
       setError('Error al eliminar la tarea.');
     }
   };
 
-  if (loading) {
-    return <div className="flex justify-center items-center min-h-[50vh]">
+  // 1. Mostrar el spinner si la autenticación está en proceso de chequeo (AuthContext).
+  if (isAuthLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
         <Loader2 className="animate-spin h-8 w-8 text-indigo-600" />
-    </div>;
+        <p className="ml-2">Verificando sesión...</p>
+      </div>
+    );
   }
+  
+  // 2. Si ya pasó el chequeo de autenticación, pero la lista de tareas está cargando.
+  if (loadingTasks) {
+     return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <Loader2 className="animate-spin h-8 w-8 text-indigo-600" />
+        <p className="ml-2">Cargando tus tareas...</p>
+      </div>
+    );
+  }
+
+  // 3. Muestra el contenido.
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">

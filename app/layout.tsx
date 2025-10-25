@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+// REMOVIDO: import { Inter } from "next/font/google"; // <-- Eliminamos la línea que causa el error
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 
-const inter = Inter({ subsets: ["latin"] });
+// REMOVIDO: const inter = Inter({ subsets: ["latin"] }); // <-- Eliminamos la inicialización
 
 export const metadata: Metadata = {
   title: "To-Do App - Prueba Técnica",
@@ -17,7 +17,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${inter.className} bg-gray-100`}>
+      {/* CORRECCIÓN: Se elimina el uso de la variable 'inter' y se añade una clase para una fuente genérica segura (sans-serif) */}
+      <body className={`font-sans bg-gray-100`}> 
         <AuthProvider> 
           {children}
         </AuthProvider>
