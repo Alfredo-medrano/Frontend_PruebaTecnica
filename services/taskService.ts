@@ -3,23 +3,22 @@ import { Task } from '@/types/task';
 
 interface TaskPayload {
   title: string;
-  description?: string;
+  // --- CORRECCIÓN AQUÍ ---
+  description?: string | null; // <-- Añadimos '| null'
   is_completed?: boolean;
 }
 
 export const taskService = {
-  async getTasks(id?: string): Promise<Task[]> {
-    const endpoint = id ? `/tasks?id=${id}` : '/tasks';
-    const response = await api.get(endpoint);
+  // El resto del archivo queda exactamente igual...
+
+  async getTasks(): Promise<Task[]> {
+    const response = await api.get('/tasks');
     return response.data.data;
   },
 
   async getTask(id: string): Promise<Task> {
-    const tasks = await this.getTasks(id);
-    if (!tasks || tasks.length === 0) {
-        throw new Error('Tarea no encontrada o no autorizada.');
-    }
-    return tasks[0];
+    const response = await api.get(`/tasks/${id}`);
+    return response.data.data;
   },
 
   async createTask(payload: { title: string; description: string }): Promise<Task> {

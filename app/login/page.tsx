@@ -32,9 +32,8 @@ export default function LoginPage() {
     try {
       const response = await api.post('/login', formData);
       
-      const token = response.data.access_token;
-      login(token, { id: 0, name: 'Usuario', email: formData.email }); 
-      
+      const token = response.data.token; // <-- ¡Aquí está el cambio!
+      login(token, { id: 0, name: 'Usuario', email: formData.email });
       // La redirección DEBE ocurrir después de que el estado local y global se actualicen
       router.push('/tasks'); 
 

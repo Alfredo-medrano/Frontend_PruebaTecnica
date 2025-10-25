@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+// Importamos 'use' para arreglar el error de Next.js
+import { useState, useEffect, useCallback, use } from 'react'; 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { taskService } from '@/services/taskService';
 import { AuthGuard } from '@/components/AuthGuard';
-import { Task, LaravelValidationData } from '@/types/task'; // IMPORTAMOS la interfaz de error
+import {  LaravelValidationData } from '@/types/task';
 import { AxiosError } from 'axios';
 
 interface EditTaskPageProps {
@@ -18,11 +19,14 @@ interface EditTaskPageProps {
 function EditTaskContent({ params }: EditTaskPageProps) {
   const router = useRouter();
   const taskId = params.id;
-  const [formData, setFormData] = useState<Partial<Task>>({
-    title: '',
-    description: '',
+  
+  // CORRECCIÓN: Usamos los nombres de la API ('titulo', 'descripcion') en el estado
+  const [formData, setFormData] = useState({
+    titulo: '',
+    descripcion: '',
     completada: false,
   });
+  
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -32,9 +36,10 @@ function EditTaskContent({ params }: EditTaskPageProps) {
     try {
       const taskData = await taskService.getTask(taskId);
       
+      // CORRECCIÓN: Leemos los datos de la API con los nombres correctos
       setFormData({
-        title: taskData.title,
-        description: taskData.description || '',
+        titulo: taskData.titulo, // <-- CORREGIDO
+        descripcion: taskData.descripcion || '', // <-- CORREGIDO
         completada: taskData.completada,
       });
     } catch (err: unknown) { 
@@ -69,9 +74,10 @@ function EditTaskContent({ params }: EditTaskPageProps) {
     setError('');
 
     try {
+      // CORRECCIÓN: Al enviar, usamos los nombres que el backend espera
       await taskService.updateTask(taskId, {
-        title: formData.title || '',
-        description: formData.description,
+        title: formData.titulo, // <-- CORREGIDO
+        description: formData.descripcion, // <-- CORREGIDO
         is_completed: formData.completada, 
       });
       
@@ -81,7 +87,6 @@ function EditTaskContent({ params }: EditTaskPageProps) {
         let message = 'Error al actualizar la tarea. Inténtalo de nuevo.';
         
         if (axiosError.response && axiosError.response.data) {
-            // CORRECCIÓN: Afirmamos la estructura de los datos de respuesta
             const responseData = axiosError.response.data as LaravelValidationData;
             
             if (responseData.errors) {
@@ -119,34 +124,34 @@ function EditTaskContent({ params }: EditTaskPageProps) {
         {error && <p className="text-red-600 mb-4 p-3 bg-red-100 rounded-lg border border-red-300">{error}</p>}
 
         <form onSubmit={handleSubmit}>
-          {/* Campo Título (A11y corregido) */}
+          {/* CORRECCIÓN: name y value ahora usan 'titulo' */}
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="title">Título</label>
+            <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="titulo">Título</label>
             <input
               type="text"
-              id="title"
-              name="title"
-              value={formData.title}
+              id="titulo"
+              name="titulo" 
+              value={formData.titulo} 
               onChange={handleChange}
               required
               className="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
-          {/* Campo Descripción (A11y corregido) */}
+          {/* CORRECCIÓN: name y value ahora usan 'descripcion' */}
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="description">Descripción</label>
+            <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="descripcion">Descripción</label>
             <textarea
-              id="description"
-              name="description"
-              value={formData.description}
+              id="descripcion"
+              name="descripcion" 
+              value={formData.descripcion} 
               onChange={handleChange}
               rows={4}
               className="shadow-sm appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
           
-          {/* Checkbox de Completado (A11y corregido) */}
+          {/* Checkbox de Completado */}
           <div className="mb-6 flex items-center">
             <input
               type="checkbox"
@@ -174,10 +179,15 @@ function EditTaskContent({ params }: EditTaskPageProps) {
   );
 }
 
-export default function EditTaskPage({ params }: EditTaskPageProps) {
-    return (
-        <AuthGuard>
-            <EditTaskContent params={params} />
-        </AuthGuard>
-    )
+// CORRECCIÓN: Arreglamos el 'use(params)' que vimos antes
+export default function EditTaskPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  
+  // Usamos 'use' para desenvolver la promesa
+  const params = use(paramsPromise);
+
+  return (
+    <AuthGuard>
+      <EditTaskContent params={params} />
+    </AuthGuard>
+  );
 }

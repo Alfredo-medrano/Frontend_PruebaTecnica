@@ -1,18 +1,18 @@
 'use client';
 
 import React, { createContext, useState, useEffect, useCallback } from 'react';
-// IMPORTAMOS setAuthHeader
-// CORRECCIÓN: Eliminamos LaravelValidationData del import de types
-import api, { setAuthHeader } from '@/lib/axios';
+// CORRECCIÓN: Eliminamos 'api' de la importación porque ya no se usa (corrige Eslint)
+import { setAuthHeader } from '@/lib/axios';
 import { AuthState, User } from '@/types/task'; 
 
-// Interfaces necesarias para el Context
+// Interfaces necesarias para el Context (AHORA INCLUIDAS)
 interface AuthContextType extends AuthState {
-  login: (token: string, user: User) => void;
+  login: (token: string | null | undefined, user: User) => void;
   logout: () => void;
-  register: (token: string, user: User) => void;
+  register: (token: string | null | undefined, user: User) => void;
 }
 
+// Constante inicial (AHORA INCLUIDA)
 const initialAuthState: AuthState = {
   user: null,
   token: null,
@@ -20,6 +20,7 @@ const initialAuthState: AuthState = {
   isLoading: true,
 };
 
+// Creación del Context (AHORA INCLUIDO)
 export const AuthContext = createContext<AuthContextType>({
   ...initialAuthState,
   login: () => {},
@@ -30,33 +31,44 @@ export const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>(initialAuthState);
 
+  // CORRECCIÓN: Valida que el token no sea el string "undefined"
   const resolveAuthState = useCallback((token: string | null) => {
+    const validToken = (token && token !== 'undefined') ? token : null;
+
     setState({
-      user: token ? { id: 0, name: 'Usuario', email: 'email@test.com' } : null,
-      token: token,
-      isAuthenticated: !!token,
+      user: validToken ? { id: 0, name: 'Usuario', email: 'email@test.com' } : null,
+      token: validToken,
+      isAuthenticated: !!validToken,
       isLoading: false,
     });
     
-    // CLAVE: Configura la cabecera de Axios de forma inmediata.
-    setAuthHeader(token); 
+    setAuthHeader(validToken); 
   }, []);
 
-  const handleAuth = (token: string) => { 
-    localStorage.setItem('jwt_token', token);
-    resolveAuthState(token); // Esto dispara setAuthHeader(token)
+  // CORRECCIÓN: Valida el token ANTES de guardarlo para evitar "undefined"
+  const handleAuth = (token: string | null | undefined) => { 
+    if (token && typeof token === 'string' && token !== 'undefined') {
+      localStorage.setItem('jwt_token', token);
+      resolveAuthState(token); 
+    } else {
+      // Si el token es inválido (null, undefined, o "undefined"), limpiamos todo
+      localStorage.removeItem('jwt_token');
+      resolveAuthState(null);
+    }
   };
 
-  // Silenciamos el warning de 'user' no usado, ya que solo necesitamos el token para handleAuth.
+  // Silenciamos el warning de 'user' no usado
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const login = (token: string, user: User) => handleAuth(token);
+  const login = (token: string | null | undefined, user: User) => handleAuth(token);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const register = (token: string, user: User) => handleAuth(token);
+  const register = (token: string | null | undefined, user: User) => handleAuth(token);
 
   const logout = useCallback(() => {
     localStorage.removeItem('jwt_token');
-    // setAuthHeader(null) se llama dentro de resolveAuthState.
-    api.post('/logout').catch(() => {});
+    
+    // Esta línea sigue comentada para evitar el bucle infinito
+    // api.post('/logout').catch(() => {});
+
     resolveAuthState(null);
   }, [resolveAuthState]);
 
@@ -66,11 +78,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const checkAuthStatus = async () => {
       const storedToken = localStorage.getItem('jwt_token');
       
+      // La validación en resolveAuthState se encargará del string "undefined"
       if (storedToken && isMounted) {
-          // Si hay token, lo establecemos (y setAuthHeader se llama)
           resolveAuthState(storedToken); 
       } else if (isMounted) {
-          // Si no hay token, resolvemos sin token (y setAuthHeader(null) se llama)
           resolveAuthState(null);
       }
     };

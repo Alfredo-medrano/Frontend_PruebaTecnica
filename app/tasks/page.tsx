@@ -48,8 +48,8 @@ function TaskListContent() {
     try {
       await taskService.updateTask(String(task.id), { 
         is_completed: !task.completada,
-        title: task.title,
-        description: task.description
+        title: task.titulo,
+        description: task.descripcion,
       });
       setTasks(prevTasks => {
           const updatedTasks = prevTasks.map(t => 
@@ -145,9 +145,9 @@ function TaskListContent() {
                   <h2 
                     className={`text-xl font-bold ${task.completada ? 'line-through text-gray-500' : 'text-gray-800'}`}
                   >
-                    {task.title}
+                    {task.titulo}
                   </h2>
-                  <p className="text-gray-600 mt-1 text-sm">{task.description}</p>
+                  <p className="text-gray-600 mt-1 text-sm">{task.descripcion}</p>
                 </div>
               </div>
                 
