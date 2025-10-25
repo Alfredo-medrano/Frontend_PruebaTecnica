@@ -20,3 +20,8 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
 }
+
+export interface LaravelValidationData {
+  message: string;
+  errors: Record<string, string[]>; 
+}
